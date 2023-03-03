@@ -1,11 +1,11 @@
 const express = require('express');
 const { WebClient } = require('@slack/web-api');
-const dotenv = require('dotenv')
-dotenv.config()
+const dotenv = require('dotenv');
+dotenv.config();
 const app = express();
 const SPAM_NOTIFICATION_TYPES = ['SpamNotification'];
 
-const client = new WebClient(process.env.SLACK_BOT_TOKEN);
+
 
 app.use(express.json());
 
@@ -14,13 +14,14 @@ app.post('/spamChecker', async (req, res) => {
   console.log(payload)
   if (payload.Type == SPAM_NOTIFICATION_TYPES) {
     const email = payload.Email;
-    const message = `New spam report from ${email}`;
+    const message = `New spam alert from ${email}`;
+    const client = new WebClient( payload.token);
     try {
       const result = await client.chat.postMessage({
         channel: '#general',
         text: message,
       });
-      return res.send(`Slack notification sent successfully: ${result.ts}`);
+      return res.send(`Slack notification sent successfully: ${JSON.stringify(result.message.text)}`);
     } catch (error) {
       return res.status(500).send(`Error sending Slack notification: ${error}`);
     }
@@ -29,9 +30,11 @@ app.post('/spamChecker', async (req, res) => {
   }
 });
 
+const port = process.env.PORT || 4000;
 
-const port = process.env.PORT || 3000;
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
+
+
